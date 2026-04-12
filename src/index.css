@@ -1,5 +1,11 @@
 @import "tailwindcss";
 
+/* Used by UndoToast to animate the countdown progress bar */
+@keyframes progress-shrink {
+  from { transform: scaleX(1); }
+  to   { transform: scaleX(0); }
+}
+
 :root {
   --text: #6b6375;
   --text-h: #08060d;
