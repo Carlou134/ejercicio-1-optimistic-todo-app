@@ -1,102 +1,118 @@
-/**
- * Home.tsx
- * ────────
- * The main page. Wires together useTodos (logic) with the UI components.
- * Also shows inline error banners when a mutation fails.
- *
- * Rule of thumb kept here:
- *   • No async logic — that lives in useTodos.
- *   • No styling decisions for individual items — those live in their components.
- *   • This file is just composition.
- */
-
-import { useTodos } from '../hooks/useTodos'
-import { TodoInput } from '../components/TodoInput'
-import { TodoList } from '../components/TodoList'
-import { UndoToast } from '../components/UndoToast'
+import { useEffect, useState } from 'react'
+import { TodoInput } from '../components/Tasks/TodoInput'
+import { TodoList } from '../components/Tasks/TodoList'
+import { UndoToast } from '../components/Tasks/UndoToast'
+import { useTasks } from '../hooks/useTasks'
 
 export function Home() {
   const {
-    todos,
+    tasks,
     isLoading,
     isError,
 
-    addTodo,
-    isAdding,
-    addError,
+    createTask,
+    isCreating,
+    createError,
 
-    toggleTodo,
+    toggleTask,
     toggleError,
 
-    deleteTodo,
+    deleteTask,
     undoDelete,
-    pendingDeleteTodo,
+    pendingDeleteTask,
     deleteError,
-  } = useTodos()
 
-  const completedCount = todos.filter(t => t.completed).length
+    isErrorArmed,
+    armError,
+  } = useTasks()
+
+  const completedCount = tasks.filter(t => t.completed).length
 
   return (
     <div className="min-h-screen bg-gray-50 px-4 py-12">
       <div className="max-w-lg mx-auto">
 
-        {/* ── Header ──────────────────────────────────────────── */}
+        {/* ── Header ───────────────────────────────────────────────────── */}
         <div className="mb-8 text-center">
           <h1 className="text-3xl font-bold text-gray-900 tracking-tight">
             Optimistic Todo App
           </h1>
           <p className="mt-1 text-sm text-gray-500">
-            React Query · Optimistic Updates · Undo on Delete
+            React Query · Optimistic Updates · Undo · Error Manual
           </p>
         </div>
 
-        {/* ── Input ───────────────────────────────────────────── */}
-        <TodoInput onAdd={addTodo} isAdding={isAdding} />
+        <TodoInput onAdd={createTask} isAdding={isCreating} />
 
-        {/* ── Error banners ───────────────────────────────────── */}
-        {/* Each banner only mounts while the mutation is in its error state.
-            React Query clears the error on the next mutation attempt. */}
-        {addError && <ErrorBanner message={`Add failed: ${addError}`} />}
-        {toggleError && <ErrorBanner message={`Toggle failed: ${toggleError}`} />}
-        {deleteError && <ErrorBanner message={`Delete failed (item restored): ${deleteError}`} />}
+        <div className="mb-4 flex justify-end">
+          <button
+            onClick={armError}
+            disabled={isErrorArmed}
+            className={`
+              px-4 py-2 rounded-lg text-sm font-medium border transition-all
+              ${isErrorArmed
+                ? 'bg-red-100 border-red-300 text-red-700 cursor-not-allowed opacity-80'
+                : 'bg-white border-amber-300 text-amber-700 hover:bg-amber-50 hover:border-amber-400'
+              }
+            `}
+          >
+            {isErrorArmed
+              ? '⚡ Error preparado — haz cualquier acción'
+              : 'Simular error'}
+          </button>
+        </div>
 
-        {/* ── Todo list ───────────────────────────────────────── */}
+        {/* ── Banners de error ──────────────────────────────────────────
+            Solo se montan mientras la mutación está en estado de error.
+            React Query limpia el error en el siguiente intento.           */}
+        {createError && <ErrorBanner key={createError} message={`Crear falló: ${createError}`} />}
+        {toggleError && <ErrorBanner key={toggleError} message={`Toggle falló: ${toggleError}`} />}
+        {deleteError && <ErrorBanner key={deleteError} message={`Eliminar falló (tarea restaurada): ${deleteError}`} />}
+
+        {/* ── Lista de tareas ───────────────────────────────────────────── */}
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
 
-          {/* Stats bar */}
-          {!isLoading && !isError && todos.length > 0 && (
+          {/* Barra de stats */}
+          {!isLoading && !isError && tasks.length > 0 && (
             <div className="px-4 py-2 bg-gray-50 border-b border-gray-100 text-xs text-gray-500 flex justify-between">
-              <span>{todos.length} task{todos.length !== 1 ? 's' : ''}</span>
-              <span>{completedCount} completed</span>
+              <span>{tasks.length} tarea{tasks.length !== 1 ? 's' : ''}</span>
+              <span>{completedCount} completada{completedCount !== 1 ? 's' : ''}</span>
             </div>
           )}
 
           <TodoList
-            todos={todos}
+            tasks={tasks}
             isLoading={isLoading}
             isError={isError}
-            onToggle={toggleTodo}
-            onDelete={deleteTodo}
+            onToggle={toggleTask}
+            onDelete={deleteTask}
           />
         </div>
 
-        {/* ── Dev hint ────────────────────────────────────────── */}
+        {/* ── Hint de latencia ─────────────────────────────────────────── */}
         <p className="mt-4 text-center text-xs text-gray-400">
-          20 % of operations fail on purpose — watch the rollbacks!
+          Latencia simulada: 800 ms · Usa "Simular error" para ver el rollback
         </p>
       </div>
 
-      {/* ── Undo toast (rendered outside the card so it floats freely) ── */}
-      {pendingDeleteTodo && (
-        <UndoToast todo={pendingDeleteTodo} onUndo={undoDelete} />
+      {/* ── Undo toast ── renderizado fuera de la card para flotar libremente */}
+      {pendingDeleteTask && (
+        <UndoToast task={pendingDeleteTask} onUndo={undoDelete} />
       )}
     </div>
   )
 }
 
-// ── Small helper component (local, not worth a separate file) ──────────
-
 function ErrorBanner({ message }: { message: string }) {
+  const [visible, setVisible] = useState(true)
+
+  useEffect(() => {
+    const timer = setTimeout(() => setVisible(false), 5000)
+    return () => clearTimeout(timer)
+  }, [])
+
+  if (!visible) return null
+
   return (
     <div
       role="alert"
@@ -104,9 +120,17 @@ function ErrorBanner({ message }: { message: string }) {
         mb-4 px-4 py-2.5 rounded-lg
         bg-red-50 border border-red-200
         text-red-700 text-sm
+        flex items-center justify-between
       "
     >
-      {message}
+      <span>{message}</span>
+      <button
+        onClick={() => setVisible(false)}
+        aria-label="Cerrar"
+        className="ml-3 text-red-400 hover:text-red-600 leading-none"
+      >
+        ✕
+      </button>
     </div>
   )
 }

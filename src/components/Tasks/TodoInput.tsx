@@ -1,11 +1,3 @@
-/**
- * TodoInput.tsx
- * ─────────────
- * Controlled form for adding a new todo.
- * Calls `onAdd(text)` and clears itself on submit.
- * Shows a spinner while the add mutation is in-flight.
- */
-
 import { useState } from 'react'
 
 interface Props {
@@ -16,8 +8,6 @@ interface Props {
 export function TodoInput({ onAdd, isAdding }: Props) {
   const [text, setText] = useState('')
 
-  // Inline handler — TypeScript infers the event type from the JSX prop,
-  // so no explicit FormEvent import is needed (deprecated in React 19).
   return (
     <form
       onSubmit={e => {

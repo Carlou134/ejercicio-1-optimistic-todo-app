@@ -1,27 +1,13 @@
-/**
- * TodoItem.tsx
- * ────────────
- * Renders a single todo row with:
- *   • a checkbox to toggle completion
- *   • the todo text (struck-through when completed)
- *   • a delete button
- *
- * Optimistic state is handled entirely in useTodos — this component
- * just receives data and callbacks; it has no async logic.
- */
-
-import type { Todo } from '../types/todo'
+import type { Task } from "../../types/task"
 
 interface Props {
-  todo: Todo
+  task: Task
   onToggle: (id: string) => void
   onDelete: (id: string) => void
 }
 
-export function TodoItem({ todo, onToggle, onDelete }: Props) {
-  // Optimistic todos added by useTodos have an id starting with "optimistic-".
-  // We dim them slightly to signal they're still being saved.
-  const isOptimistic = todo.id.startsWith('optimistic-')
+export function TodoItem({ task, onToggle, onDelete }: Props) {
+  const isOptimistic = task.id.startsWith('optimistic-')
 
   return (
     <li
@@ -32,11 +18,11 @@ export function TodoItem({ todo, onToggle, onDelete }: Props) {
         ${isOptimistic ? 'opacity-50' : 'opacity-100'}
       `}
     >
-      {/* Toggle checkbox */}
+      {/* Checkbox de toggle */}
       <input
         type="checkbox"
-        checked={todo.completed}
-        onChange={() => onToggle(todo.id)}
+        checked={task.completed}
+        onChange={() => onToggle(task.id)}
         disabled={isOptimistic}
         className="
           w-4 h-4 rounded border-gray-300
@@ -46,23 +32,19 @@ export function TodoItem({ todo, onToggle, onDelete }: Props) {
         "
       />
 
-      {/* Todo text */}
       <span
         className={`
           flex-1 text-sm
-          ${todo.completed
-            ? 'line-through text-gray-400'
-            : 'text-gray-700'}
+          ${task.completed ? 'line-through text-gray-400' : 'text-gray-700'}
         `}
       >
-        {todo.text}
+        {task.text}
       </span>
 
-      {/* Delete button */}
       <button
-        onClick={() => onDelete(todo.id)}
+        onClick={() => onDelete(task.id)}
         disabled={isOptimistic}
-        aria-label={`Delete "${todo.text}"`}
+        aria-label={`Eliminar "${task.text}"`}
         className="
           p-1.5 rounded-md text-gray-400
           hover:text-red-500 hover:bg-red-50
@@ -70,7 +52,6 @@ export function TodoItem({ todo, onToggle, onDelete }: Props) {
           transition-colors
         "
       >
-        {/* Trash icon (inline SVG, no external dependency) */}
         <svg
           xmlns="http://www.w3.org/2000/svg"
           className="w-4 h-4"
